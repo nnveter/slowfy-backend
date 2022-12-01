@@ -12,6 +12,6 @@ public class User
     public string Password { get; set; } // Hashed password (bcrypt)
     [MaxLength(32)]
     public string Name { get; set; } // Username
-    public string AvatarSrc { get; set; } = "None"; // Link to avatar image on server
+    public string AvatarSrc { get; set; } = "None";  // Link to avatar image on server
     
 }
