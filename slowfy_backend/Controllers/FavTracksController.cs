@@ -74,6 +74,7 @@ namespace slowfy_backend.Controllers
             if (favTrack == null) return BadRequest("Track is not a favourite");
 
             var result = _context.FavouriteTracks.Remove(favTrack);
+            await _context.SaveChangesAsync();
             return Ok();
         }
 
@@ -91,6 +92,18 @@ namespace slowfy_backend.Controllers
                 .Select(k => k.TargetTrack)
                 .ToListAsync();
             return Json(favs);
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> IsFavourite(int trackId = -1)
+        {
+            var user = await _context.User.FirstOrDefaultAsync(p => p.Email == User.FindFirstValue(ClaimTypes.Email));
+
+            var favTrack = await _context.FavouriteTracks
+                .Where(p => p.TargetTrack.Id == trackId)
+                .CountAsync(p => p.AddingUser.Id == user.Id);
+            return Json(favTrack);
         }
     }
 }

@@ -91,8 +91,14 @@ namespace slowfy_backend.Controllers
         // tracks/search?q=NAME&count=10
         public async Task<IActionResult> Search(string q = "", int count = 10)
         {
-            var res = await _context.Tracks.Where(p => p.Title.Contains(q)).ToListAsync();
-            var sorted = SortByPopular(res, count);
+            if (String.IsNullOrEmpty(q) || String.IsNullOrWhiteSpace(q)) return Json(new { });
+            List<Tracks> allResults = new List<Tracks>();
+            var res = _context.Tracks.Where(p => p.Title.ToLower().Contains(q.ToLower())).ToList();
+            var res2 = _context.Tracks.Where(p => p.Author.ToLower().Contains(q.ToLower())).ToList();
+            allResults = allResults.Concat(res).ToList();
+            allResults = allResults.Concat(res2).ToList();
+
+            var sorted = SortByPopular(allResults, count);
             return Json(sorted.Select(p => p.Track).ToList());
         }
     }
