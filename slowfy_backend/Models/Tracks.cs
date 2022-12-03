@@ -8,5 +8,6 @@ public class Tracks
     public string Duration { get; set; }
     public string Source { get; set; }
     public bool E { get; set; }
+    public string Image { get; set; }
 
 }
