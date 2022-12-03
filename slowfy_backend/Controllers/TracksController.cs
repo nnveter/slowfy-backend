@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using slowfy_backend.Data;
 using slowfy_backend.Models;
+using slowfy_backend.Services;
 
 namespace slowfy_backend.Controllers
 {
@@ -48,21 +49,7 @@ namespace slowfy_backend.Controllers
         [HttpGet]
         public async Task<IActionResult> GetMostPopularTracks(int count = 10)
         {
-            var res = _context.Auditions.GroupBy(p => p.Track);
-            
-            var dic = new List<TrackAudDto>();
-            
-            foreach (var VARIABLE in res)
-            {
-                int countOfAud = VARIABLE.Count();
-                dic.Add(new TrackAudDto()
-                {
-                    AudCount = countOfAud,
-                    Track = VARIABLE.Key
-                });
-            }
-
-            return Json(dic.OrderByDescending(p => p.AudCount).Select(p => p.Track).Take(count).ToList());
+            return Json(SortByPopular(await _context.Tracks.ToListAsync(), count).Select(g => g.Track));
         }
 
         private List<SBP_dto> SortByPopular(List<Tracks>? initial, int max = 10)
@@ -82,10 +69,17 @@ namespace slowfy_backend.Controllers
         }
 
         // tracks/search?q=NAME&count=10
-        public async Task<IActionResult> Search(string q = "", int count = 10)
+        public IActionResult Search(string q = "", int count = 10)
         {
-            var res = await _context.Tracks.Where(p => p.Title.Contains(q)).ToListAsync();
-            var sorted = SortByPopular(res, count);
+            Console.WriteLine("q" + q);
+            if (String.IsNullOrEmpty(q) || String.IsNullOrWhiteSpace(q)) return Json(new {});
+            List<Tracks> allResults = new List<Tracks>();
+            var res = _context.Tracks.Where(p => p.Title.ToLower().Contains(q.ToLower())).ToList();
+            var res2 = _context.Tracks.Where(p => p.Author.ToLower().Contains(q.ToLower())).ToList();
+            allResults = allResults.Concat(res).ToList();
+            allResults = allResults.Concat(res2).ToList();
+            
+            var sorted = SortByPopular(allResults, count);
             return Json(sorted.Select(p => p.Track).ToList());
         }
 

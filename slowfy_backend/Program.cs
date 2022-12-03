@@ -28,6 +28,17 @@ builder.Services.AddAuthentication(
             ValidateAudience = false
         };
     });
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: "_myAllowSpecificOrigins",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000");
+            policy.AllowAnyHeader();
+            policy.AllowCredentials();
+            policy.AllowAnyMethod();
+        });
+});
 
 // adding services
 builder.Services.AddTransient<IUsersService, UsersService>();
@@ -50,6 +61,8 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseCors("_myAllowSpecificOrigins");
 
 app.MapControllerRoute(
     name: "default",

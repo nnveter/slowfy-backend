@@ -98,6 +98,15 @@ namespace slowfy_backend.Controllers
             return user != null ? Json(user.AvatarSrc) : BadRequest();
         }
         
+        [HttpGet]
+        [Authorize]
+        public async Task<ActionResult> GetProfileName()
+        {
+            var email = User?.FindFirstValue(ClaimTypes.Email);
+            User? user = await _context.User.FirstOrDefaultAsync(p => p.Email == email);
+            return user != null ? Json(user.Name) : BadRequest();
+        }
+        
         [HttpPost]
         [Authorize]
         public async Task<ActionResult> SetProfilePhoto(string src)

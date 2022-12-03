@@ -34,12 +34,13 @@ namespace slowfy_backend.Controllers
         }
 
         // serverUrl/FavTracks/AddToFavourite     [form-data]: trackId   [auth]: bearer
+        [HttpGet]
         [Authorize]
         public async Task<IActionResult> AddToFavourite(int trackId = -1)
         {
             var user = await _context.User.FirstOrDefaultAsync(p => p.Email == User.FindFirstValue(ClaimTypes.Email));
             if (user == null) return BadRequest("Authorize error");
-            if (trackId == -1) return BadRequest("trackId is null");
+            if (trackId <= -1) return BadRequest("trackId is null");
 
             var track = await _tracksService.GetTrackById(trackId);
 
@@ -60,6 +61,7 @@ namespace slowfy_backend.Controllers
         }
 
         // serverUrl/FavTracks/RemoveFromFavourites     [form-data]: trackId   [auth]: bearer
+        [HttpGet]
         [Authorize]
         public async Task<IActionResult> RemoveFromFavourites(int trackId = -1)
         {
@@ -74,9 +76,11 @@ namespace slowfy_backend.Controllers
             if (favTrack == null) return BadRequest("Track is not a favourite");
 
             var result = _context.FavouriteTracks.Remove(favTrack);
+            await _context.SaveChangesAsync();
             return Ok();
         }
 
+        [HttpGet]
         [Authorize]
         public async Task<IActionResult> GetMyFavorite()
         {
@@ -86,6 +90,20 @@ namespace slowfy_backend.Controllers
                 .Select(k => k.TargetTrack)
                 .ToListAsync();
             return Json(favs);
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> IsFavourite(int trackId = -1)
+        {
+            var user = await _context.User.FirstOrDefaultAsync(p => p.Email == User.FindFirstValue(ClaimTypes.Email));
+            if (user == null) return BadRequest("Authorize error");
+            if (trackId == -1) return BadRequest("trackId is null");
+
+            var favTrack = await _context.FavouriteTracks
+                .Where(p => p.TargetTrack.Id == trackId)
+                .CountAsync(p => p.AddingUser.Id == user.Id);
+            return Json(favTrack);
         }
 
         private bool FavouriteTracksExists(int id)
